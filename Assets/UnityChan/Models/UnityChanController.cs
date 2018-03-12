@@ -23,8 +23,18 @@ public class UnityChanController : MonoBehaviour {
 
     private GameObject stateText;
 
-	// Use this for initialization
-	void Start () {
+    private GameObject scoreText;
+
+    private int score = 0;
+
+    private bool isLButtonDown = false;
+
+    private bool isRButtonDown = false;
+
+
+
+    // Use this for initialization
+    void Start() {
         this.myAnimator = GetComponent<Animator>();
 
         this.myAnimator.SetFloat("Speed", 1);
@@ -32,10 +42,13 @@ public class UnityChanController : MonoBehaviour {
         this.myRigidbody = GetComponent<Rigidbody>();
 
         this.stateText = GameObject.Find("GameResultText");
-	}
-	
-	// Update is called once per frame
-	void Update () {
+
+        this.scoreText = GameObject.Find("ScoreText");
+    }
+
+
+    // Update is called once per frame
+    void Update() {
 
         if (this.isEnd)
         {
@@ -46,40 +59,75 @@ public class UnityChanController : MonoBehaviour {
         }
 
         this.myRigidbody.AddForce(this.transform.forward * this.forwardForce);
+        {
 
-        if (Input.GetKey(KeyCode.LeftArrow) && -this.movableRange < this.transform.position.x)
+            if ((Input.GetKey(KeyCode.LeftArrow) || this.isLButtonDown) && -this.movableRange < this.transform.position.x)
         {
-            this.myRigidbody.AddForce(-this.turnForce, 0, 0);
-        }
-        else if (Input.GetKey(KeyCode.RightArrow) && this.movableRange > this.transform.position.x)
+                this.myRigidbody.AddForce(-this.turnForce, 0, 0);
+            }
+        else if ((Input.GetKey(KeyCode.RightArrow) || this.isRButtonDown) && this.movableRange > this.transform.position.x)
         {
-            this.myRigidbody.AddForce(this.turnForce, 0, 0);
+                this.myRigidbody.AddForce(this.turnForce, 0, 0);
+            }
+            if (this.myAnimator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
+            {
+                this.myAnimator.SetBool("Jump", false);
+            }
+            if (Input.GetKeyDown(KeyCode.Space) && this.transform.position.y < 0.5f) {
+                this.myAnimator.SetBool("Jump", true);
+                this.myRigidbody.AddForce(this.transform.up * this.upForce);
+            }
         }
-        if (this.myAnimator.GetCurrentAnimatorStateInfo(0).IsName("Jump"))
-        {
-            this.myAnimator.SetBool("Jump", false);
-        }
-        if (Input.GetKeyDown(KeyCode.Space) &&this.transform.position.y < 0.5f){
-            this.myAnimator.SetBool("Jump", true);
-            this.myRigidbody.AddForce(this.transform.up * this.upForce);
-        }
-        }
+    }
+
+
+
     private void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.tag == "CarTag"|| other.gameObject.tag == "TrafficConeTag")
+        if (other.gameObject.tag == "CarTag" || other.gameObject.tag == "TrafficConeTag")
         {
             this.isEnd = true;
             this.stateText.GetComponent<Text>().text = "GAME OVER";
         }
-        if(other.gameObject.tag == "GoalTag")
+        if (other.gameObject.tag == "GoalTag")
         {
             this.isEnd = true;
+            this.stateText.GetComponent<Text>().text = "CLEAR!!";
 
         }
-        if(other.gameObject.tag == "CoinTag")
+        if (other.gameObject.tag == "CoinTag")
         {
+            this.score += 10;
+
             GetComponent<ParticleSystem>().Play();
+
+            this.scoreText.GetComponent<Text>().text = "score" + this.score + "pt";
+
             Destroy(other.gameObject);
         }
+    }
+    public void GetMyJumpButtonDown()
+    {
+        if (this.transform.position.y < 0.5f)
+        {
+            this.myAnimator.SetBool("Jump", true);
+            this.myRigidbody.AddForce(this.transform.up * this.upForce);
+        }
+    }
+    public void GetMyLeftButtonDown()
+    {
+        this.isLButtonDown = true;
+    }
+    public void GetMyleftButtonUp()
+    {
+        this.isLButtonDown = false;
+    }
+    public void GetMyRightButtonDown()
+    {
+        this.isRButtonDown = true;
+    }
+    public void GetMyRightButtonUp()
+    {
+        this.isRButtonDown = false;
     }
 }
